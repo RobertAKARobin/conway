@@ -4,8 +4,8 @@ const X_MAX = 10;
 const X_MIN = 1;
 const IS_LIVE = 'O';
 const IS_DEAD = '.';
-const GEN_INTERVAL_MS = 500;
-const GEN_MAX = 10;
+const GEN_INTERVAL_MS = 100;
+const GEN_MAX = 20;
 
 function assert(value) {
   if (value === undefined || value === null) {
@@ -97,8 +97,10 @@ function main() {
   let gen = 0;
   let looper = undefined;
   Board.cellSet(board, 5, 5, IS_LIVE);
-  Board.cellSet(board, 5, 6, IS_LIVE);
-  Board.cellSet(board, 6, 6, IS_LIVE);
+  Board.cellSet(board, 4, 6, IS_LIVE);
+  Board.cellSet(board, 4, 7, IS_LIVE);
+  Board.cellSet(board, 5, 7, IS_LIVE);
+  Board.cellSet(board, 6, 7, IS_LIVE);
   print();
 
   looper = setInterval(loop, GEN_INTERVAL_MS);
