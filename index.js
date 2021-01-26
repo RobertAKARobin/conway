@@ -1,14 +1,14 @@
-const Y_MAX = 20;
+const Y_MAX = 10;
 const Y_MIN = 1;
-const X_MAX = 40;
+const X_MAX = 10;
 const X_MIN = 1;
-const IS_LIVE = '0';
+const IS_LIVE = 'O';
 const IS_DEAD = '.';
 const GEN_INTERVAL_MS = 500;
-const GEN_MAX = 3;
+const GEN_MAX = 10;
 
 function assert(value) {
-  if (!value) {
+  if (value === undefined || value === null) {
     throw false;
   }
   return value;
@@ -32,77 +32,94 @@ const Board = {
     try {
       return assert(board[y - 1][x - 1]);
     } catch(e) {
-      console.warn(`Can't get (${x},${y}).`);
+      // console.warn(`Can't get (${x},${y}).`);
       return null;
     }
   },
 
   cellSet(board, x, y, isLive) {
     try {
-      board[y - 1][x - 1] = isLive;
+      return (board[y - 1][x - 1] = isLive);
     } catch(e) {
-      console.warn(`Can't set (${x},${y}).`);
+      // console.warn(`Can't set (${x},${y}).`);
     }
+  },
+
+  cellEvalState(board, x, y) {
+    const cell = Board.cellGet(board, x, y);
+        
+    let numberOfLiveNeighbors = 0;
+    const neighborXMin = x - 1;
+    const neighborXMax = x + 1;
+    const neighborYMin = y - 1;
+    const neighborYMax = y + 1;
+    for (let neighborX = neighborXMin; neighborX <= neighborXMax; neighborX++) {
+      for (let neighborY = neighborYMin; neighborY <= neighborYMax; neighborY++) {
+        const neighbor = Board.cellGet(board, neighborX, neighborY);
+        if (neighbor === IS_LIVE) {
+          numberOfLiveNeighbors += 1;
+        }
+      }
+    }
+
+    if (cell === IS_LIVE) {
+      numberOfLiveNeighbors -= 1;
+    }
+
+    if (cell === IS_DEAD && numberOfLiveNeighbors === 3) {
+      return IS_LIVE;
+    } else if (cell === IS_LIVE && numberOfLiveNeighbors <= 1) {
+      return IS_DEAD;
+    } else if (cell === IS_LIVE && numberOfLiveNeighbors <= 3) {
+      return IS_LIVE;
+    }
+    return IS_DEAD;
   },
 
   render(board) {
     return board.map(row => row.join('')).join('\n');
   },
 
-  step(board) {
-    return board;
+  step(oldBoard) {
+    const board = Board.drawNew(X_MIN, X_MAX, Y_MIN, Y_MAX);
+    for (let y = Y_MIN; y <= Y_MAX; y++) {
+      for (let x = X_MIN; x <= X_MAX; x++) {
+        const cellState = Board.cellEvalState(oldBoard, x, y);
+        Board.cellSet(board, x, y, cellState);
+      }
+    }
+   return board;
   },
 }
 
-let board = Board.drawNew(X_MIN, X_MAX, Y_MIN, Y_MAX);
-let gen = 0;
-let looper = undefined;
-Board.cellSet(board, 10, 10, IS_LIVE);
+function main() {
+  let board = Board.drawNew(X_MIN, X_MAX, Y_MIN, Y_MAX);
+  let gen = 0;
+  let looper = undefined;
+  Board.cellSet(board, 5, 5, IS_LIVE);
+  Board.cellSet(board, 5, 6, IS_LIVE);
+  Board.cellSet(board, 6, 6, IS_LIVE);
+  print();
 
-looper = setInterval(loop, GEN_INTERVAL_MS);
-loop();
+  looper = setInterval(loop, GEN_INTERVAL_MS);
+  
+  function loop() {
+    gen += 1;
+  
+    if (gen >= GEN_MAX) {
+      clearInterval(looper);
+    }
 
-function loop() {
-  gen += 1;
-
-  if (gen >= GEN_MAX) {
-    clearInterval(looper);
+    board = Board.step(board);
+    print();
   }
 
-  console.clear();
-  console.log(`GENERATION ${gen}`);
-  board = Board.step(board);
-  console.log(Board.render(board));
-  console.log('');
-}
-
-
-/*
-1. Any live cell with fewer than two live neighbors dies, as if by under population.
-2. Any live cell with two or three live neighbors lives on to the next generation.
-3. Any live cell with more than three live neighbors dies, as if by overpopulation.
-4. Any dead cell with exactly three live neighbors becomes a live cell, as if by reproduction.
-
-for each row as row {
-  for each col as col {
-    cell = boardGetAt(board, row, col);
-    if (cell === DEAD) {
-      continue
-    }
-    
-    let numberOfLiveNeighbors = 0;
-    const neighborColMin = col - 1;
-    const neighborRowMin = row - 1;
-    const neighborColMax = col + 1;
-    const neighborRowMax = row + 1;
-    for (let neighborRow = neighborRowMin; neighborRow < neighborRowMax; neighborRow++) {
-      for (let neighborCol = neighborColMin; neighborCol < neighborColMax; neighborCol++) {
-        const neighbor = boardGetAt(board, neighborRow, neighborCol);
-        if (neighbor === LIVE) {
-          numberOfLiveNeighbors += 1;
-        }
-      }
-    }
+  function print() {
+    console.clear();
+    console.log(`GENERATION ${gen}`);
+    console.log(Board.render(board));
+    console.log('');
   }
 }
-*/
+
+main();
