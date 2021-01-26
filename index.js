@@ -4,6 +4,7 @@ const X_MAX = 40;
 const X_MIN = 1;
 const IS_LIVE = '0';
 const IS_DEAD = '.';
+const GEN_INTERVAL_MS = 500;
 const GEN_MAX = 3;
 
 function assert(value) {
@@ -54,14 +55,27 @@ const Board = {
 }
 
 let board = Board.drawNew(X_MIN, X_MAX, Y_MIN, Y_MAX);
+let gen = 0;
+let looper = undefined;
 Board.cellSet(board, 10, 10, IS_LIVE);
 
-for (let gen = 1; gen <= GEN_MAX; gen++) {
+looper = setInterval(loop, GEN_INTERVAL_MS);
+loop();
+
+function loop() {
+  gen += 1;
+
+  if (gen >= GEN_MAX) {
+    clearInterval(looper);
+  }
+
+  console.clear();
   console.log(`GENERATION ${gen}`);
   board = Board.step(board);
   console.log(Board.render(board));
   console.log('');
 }
+
 
 /*
 1. Any live cell with fewer than two live neighbors dies, as if by under population.
